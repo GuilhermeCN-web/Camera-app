@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Button, Image, FlatList, Alert, Text } from 'react-native';
+import { View, Button, Image, FlatList, Alert, Text, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera } from 'expo-camera';
 
 const Index = () => {
-  const [image, setImage] = useState<string>();
+  const [images, setImages] = useState<string[]>([]);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [hasGalleryPermission, setHasGalleryPermission] = useState<boolean | null>(null);
 
-  // Solicitar permissões quando o app iniciar
   useEffect(() => {
     (async () => {
       const cameraStatus = await Camera.requestCameraPermissionsAsync();
@@ -19,7 +18,6 @@ const Index = () => {
     })();
   }, []);
 
-  // Função para capturar foto com a câmera
   const takePhoto = async () => {
     if (!hasCameraPermission) {
       Alert.alert('Erro', 'Permissão para acessar a câmera negada.');
@@ -32,11 +30,11 @@ const Index = () => {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri); // Adiciona a imagem ao estado
+      const newImage = result.assets[0].uri;
+      setImages(prev => [...prev, newImage]);
     }
   };
 
-  // Função para selecionar uma imagem da galeria
   const pickImage = async () => {
     if (!hasGalleryPermission) {
       Alert.alert('Erro', 'Permissão para acessar a galeria negada.');
@@ -49,15 +47,24 @@ const Index = () => {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri); 
+      const newImage = result.assets[0].uri;
+      setImages(prev => [...prev, newImage]);
     }
   };
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ flex: 1, padding: 20 }}>
       <Button title="Tirar Foto" onPress={takePhoto} />
       <Button title="Selecionar da Galeria" onPress={pickImage} />
-      <Image source={{ uri: image }} style={{ width: 100, height: 100, margin: 5 }} />
+      <ScrollView contentContainerStyle={{ marginTop: 10 }}>
+        {images.map((uri, index) => (
+          <Image
+            key={index}
+            source={{ uri }}
+            style={{ width: 100, height: 100, margin: 5}}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 };
